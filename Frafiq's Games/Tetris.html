@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Custom favicon (this is the icon that appears in the browser tab) -->
+    <link rel="icon" href="Frafiqs.png" type="image/png">
+
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            font-family: Arial, sans-serif;
+            background-image: url('background.png'); /* Set your background image here */
+            background-size: cover; /* Ensures the image covers the entire screen */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat; /* Prevents the image from repeating */
+        }
+
+        #scoreBoard {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        canvas {
+            border: 2px solid #fff;
+            background-color: rgba(34, 34, 34, 0.8); /* Dark background for the game area */
+        }
+    </style>
+</head>
+<body>
+    <div id="scoreBoard">
+        <p>Score: <span id="score">0</span></p>
+        <p>World Record: <span id="worldRecord">0</span></p>
+    </div>
+    <canvas id="tetris" width="300" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('tetris');
+        const context = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const worldRecordElement = document.getElementById('worldRecord');
+
+        context.scale(30, 30); // Scale up the canvas for better visuals
+
+        const arenaWidth = 10;
+        const arenaHeight = 20;
+
+        let score = 0;
+        let worldRecord = localStorage.getItem('worldRecord') || 0;
+
+        const colors = [
+            null,
+            'red',
+            'yellow',
+            'orange',
+            'blue',
+            'cyan',
+            'green',
+            'purple',
+        ];
+
+        worldRecordElement.textContent = worldRecord;
+
+        function createMatrix(width, height) {
+            const matrix = [];
+            while (height--) {
+                matrix.push(new Array(width).fill(0));
+            }
+            return matrix;
+        }
+
+        function drawMatrix(matrix, offset) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        context.fillStyle = colors[value];
+                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
+                    }
+                });
+            });
+        }
+
+        function draw() {
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawMatrix(arena, { x: 0, y: 0 });
+            drawMatrix(player.matrix, player.pos);
+        }
+
+        function merge(arena, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        arena[y + player.pos.y][x + player.pos.x] = value;
+                    }
+                });
+            });
+        }
+
+        function collide(arena, player) {
+            const [m, o] = [player.matrix, player.pos];
+            for (let y = 0; y < m.length; y++) {
+                for (let x = 0; x < m[y].length; x++) {
+                    if (
+                        m[y][x] !== 0 &&
+                        (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0
+                    ) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function rotate(matrix, dir) {
+            for (let y = 0; y < matrix.length; y++) {
+                for (let x = 0; x < y; x++) {
+                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                }
+            }
+            if (dir > 0) {
+                matrix.forEach(row => row.reverse());
+            } else {
+                matrix.reverse();
+            }
+        }
+
+        function playerMove(offset) {
+            player.pos.x += offset;
+            if (collide(arena, player)) {
+                player.pos.x -= offset;
+            }
+        }
+
+        function playerDrop() {
+            player.pos.y++;
+            if (collide(arena, player)) {
+                player.pos.y--;
+                merge(arena, player);
+                playerReset();
+                arenaSweep();
+            }
+            dropCounter = 0;
+        }
+
+        function playerReset() {
+            const pieces = 'ILJOTSZ';
+            player.matrix = createPiece(pieces[(pieces.length * Math.random()) | 0]);
+            player.pos.y = 0;
+            player.pos.x = ((arena[0].length / 2) | 0) - ((player.matrix[0].length / 2) | 0);
+
+            if (collide(arena, player)) {
+                updateWorldRecord(score);
+                alert(`Game Over!\\nFinal Score: ${score}`);
+                arena.forEach(row => row.fill(0));
+                score = 0;
+                scoreElement.textContent = score;
+            }
+        }
+
+        function createPiece(type) {
+            if (type === 'T') {
+                return [
+                    [0, 1, 0],
+                    [1, 1, 1],
+                    [0, 0, 0],
+                ];
+            } else if (type === 'O') {
+                return [
+                    [2, 2],
+                    [2, 2],
+                ];
+            } else if (type === 'L') {
+                return [
+                    [0, 0, 3],
+                    [3, 3, 3],
+                    [0, 0, 0],
+                ];
+            } else if (type === 'J') {
+                return [
+                    [4, 0, 0],
+                    [4, 4, 4],
+                    [0, 0, 0],
+                ];
+            } else if (type === 'I') {
+                return [
+                    [0, 0, 0, 0],
+                    [5, 5, 5, 5],
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                ];
+            } else if (type === 'S') {
+                return [
+                    [0, 6, 6],
+                    [6, 6, 0],
+                    [0, 0, 0],
+                ];
+            } else if (type === 'Z') {
+                return [
+                    [7, 7, 0],
+                    [0, 7, 7],
+                    [0, 0, 0],
+                ];
+            }
+        }
+
+        function arenaSweep() {
+            let rowCount = 1;
+            outer: for (let y = arena.length - 1; y >= 0; y--) {
+                for (let x = 0; x < arena[y].length; x++) {
+                    if (arena[y][x] === 0) {
+                        continue outer;
+                    }
+                }
+                const row = arena.splice(y, 1)[0].fill(0);
+                arena.unshift(row);
+                y++;
+
+                score += rowCount * 10;
+                scoreElement.textContent = score;
+                rowCount *= 2;
+            }
+        }
+
+        function updateWorldRecord(score) {
+            if (score > worldRecord) {
+                worldRecord = score;
+                localStorage.setItem('worldRecord', worldRecord);
+                worldRecordElement.textContent = worldRecord;
+            }
+        }
+
+        let dropCounter = 0;
+        let dropInterval = 1000;
+
+        let lastTime = 0;
+        function update(time = 0) {
+            const deltaTime = time - lastTime;
+
+            dropCounter += deltaTime;
+            if (dropCounter > dropInterval) {
+                playerDrop();
+            }
+
+            lastTime = time;
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        // Event listener for WASD controls
+        document.addEventListener('keydown', event => {
+            if (event.key === 'a' || event.key === 'ArrowLeft') {
+                playerMove(-1); // Move left (A or Left Arrow)
+            } else if (event.key === 'd' || event.key === 'ArrowRight') {
+                playerMove(1); // Move right (D or Right Arrow)
+            } else if (event.key === 's' || event.key === 'ArrowDown') {
+                playerDrop(); // Move down (S or Down Arrow)
+            } else if (event.key === 'w' || event.key === 'ArrowUp'|| event.key === 'r') {
+                rotate(player.matrix, 1); // Rotate (W or Up Arrow or R)
+                if (collide(arena, player)) {
+                    rotate(player.matrix, -1); // If collision, revert rotation
+                }
+            }
+        });
+
+        const arena = createMatrix(arenaWidth, arenaHeight);
+
+        const player = {
+            pos: { x: 0, y: 0 },
+            matrix: null,
+        };
+
+        playerReset();
+        update();
+    </script>
+</body>
+</html>
+
+
+
+
+<style>
+    body {
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: url('background.png') no-repeat center center fixed;
+        background-size: cover;
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+
+    h1 {
+        font-size: 50px;
+        margin-bottom: 40px;
+        color: white;
+    }
+
+    .difficulty {
+        display: flex;
+        gap: 20px;
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .difficulty a {
+        padding: 15px 30px;
+        font-size: 20px;
+        border: none;
+        cursor: pointer;
+        border-radius: 10px;
+        text-decoration: none;
+        color: white;
+        display: inline-block;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .difficulty a:hover {
+        transform: scale(1.1);
+    }
+
+    .easy {
+        background-color: #4caf50;
+    }
+
+    .medium {
+        background-color: #ffeb3b;
+        color: black;
+    }
+
+    .hard {
+        background-color: #f44336;
+    }
+
+    .extreme {
+        background-color: #691c7c;
+    }
+
+    .backmenu {
+        background-color:  #28529e;
+    }
+
+
+    .username-input {
+        margin-bottom: 20px;
+        font-size: 18px;
+    }
+
+    .username-input input {
+        padding: 10px;
+        font-size: 18px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+</style>
+</head>
+<body>
+<div>
+   <br>
+    <div class="difficulty">
+        
+        <a href="http://127.0.0.1:5500/index%20copy.html" class="backmenu" id="extremeBtn">Back To Main Menu</a>
+    </div>
+</div>

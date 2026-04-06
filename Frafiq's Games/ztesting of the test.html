@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="Frafiqs.png" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aim Trainer - Easy Mode</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #bee8ee;
+            font-family: Arial, sans-serif;
+            cursor: crosshair;
+            user-select: none;
+        }
+
+        canvas {
+            display: block;
+            margin: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .score, .timer, .game-over {
+            position: absolute;
+            z-index: 100;
+            user-select: none;
+        }
+
+        .score {
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: black;
+        }
+
+        .timer {
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: black;
+        }
+
+        .game-over {
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            color: black;
+            text-align: center;
+            display: none;
+        }
+
+        .button-container {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+            display: none;
+        }
+
+        .button {
+            width: 170px;
+            height: 60px;
+            background-color: #4caf50;
+            border-radius: 8px;
+            color: black;
+            font-size: 22px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: crosshair;
+            user-select: none;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="score" class="score" style="color: white;">Score: 0</div>
+    <div id="timer" class="timer" style="color: white;">Time: 30</div>
+    <div id="gameOverMessage" class="game-over" style="color: white;">Game Over! Final Score: <span id="finalScore"></span></div>
+
+    <div id="buttonContainer" class="button-container">
+        <div id="retryButton" class="button">Retry</div>
+        <div id="homeButton" class="button">Back to Home</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const targetRadius = 70;
+        const targetPadding = targetRadius + 10;
+        let score = 0;
+        let targets = [];
+        let gameOver = false;
+        let timer = 30;
+        let timerStarted = false;
+        let timerInterval;
+        let mouseX = canvas.width / 2;
+        let mouseY = canvas.height / 2;
+        let mouseClickDetected = false;
+
+        const backgroundImg = new Image();
+        backgroundImg.src = 'background.png';
+
+        const targetImg = new Image();
+        targetImg.src = 'bluetarget.png';
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Target {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = targetRadius;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.clip();
+
+                ctx.drawImage(
+                    targetImg,
+                    this.x - this.radius,
+                    this.y - this.radius,
+                    this.radius * 2,
+                    this.radius * 2
+                );
+                ctx.restore();
+            }
+
+            checkHit(mouseX, mouseY) {
+                const dx = this.x - mouseX;
+                const dy = this.y - mouseY;
+                return Math.sqrt(dx * dx + dy * dy) < this.radius;
+            }
+
+            randomizePosition(existingTargets) {
+                let validPosition = false;
+
+                while (!validPosition) {
+                    const newX = Math.random() * (canvas.width - 2 * targetPadding) + targetPadding;
+                    const newY = Math.random() * (canvas.height - 2 * targetPadding) + targetPadding;
+
+                    validPosition = !existingTargets.some(target => {
+                        const dx = newX - target.x;
+                        const dy = newY - target.y;
+                        return Math.sqrt(dx * dx + dy * dy) < 2 * targetRadius;
+                    });
+
+                    if (validPosition) {
+                        this.x = newX;
+                        this.y = newY;
+                    }
+                }
+            }
+        }
+
+        function drawGameElements() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+            targets.forEach(target => target.draw());
+        }
+
+        canvas.addEventListener('mousemove', function (event) {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = event.clientX - rect.left;
+            mouseY = event.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mousedown', function () {
+            mouseClickDetected = true;
+            if (!timerStarted) {
+                startTimer();
+                timerStarted = true;
+            }
+        });
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    gameOver = true;
+                    targets = [];
+                    document.getElementById('gameOverMessage').style.display = 'block';
+                    document.getElementById('finalScore').textContent = score;
+                    document.getElementById('buttonContainer').style.display = 'flex';
+
+                    // Save the score to localStorage
+                    saveScoreToLeaderboard(score);
+                } else {
+                    timer -= 1;
+                    document.getElementById('timer').textContent = `Time: ${timer}`;
+                }
+            }, 1000);
+        }
+
+        document.getElementById('retryButton').addEventListener('click', resetGame);
+        document.getElementById('homeButton').addEventListener('click', () => {
+            window.location.href = "http://127.0.0.1:5500/leaderboard.html";
+        });
+
+        function resetGame() {
+            score = 0;
+            timer = 30;
+            timerStarted = false;
+            targets = [];
+            createTargets();
+            gameOver = false;
+
+            document.getElementById('gameOverMessage').style.display = 'none';
+            document.getElementById('buttonContainer').style.display = 'none';
+            document.getElementById('score').textContent = `Score: ${score}`;
+            document.getElementById('timer').textContent = `Time: ${timer}`;
+            updateGame();
+        }
+
+        function createTargets() {
+            for (let i = 0; i < 3; i++) {
+                const target = new Target(0, 0);
+                target.randomizePosition(targets);
+                targets.push(target);
+            }
+        }
+
+        function updateGame() {
+            drawGameElements();
+            if (!gameOver) {
+                if (mouseClickDetected) {
+                    targets.forEach(target => {
+                        if (target.checkHit(mouseX, mouseY)) {
+                            target.randomizePosition(targets);
+                            score += 1;
+                        }
+                    });
+                    mouseClickDetected = false;
+                }
+            }
+            document.getElementById('score').textContent = `Score: ${score}`;
+            requestAnimationFrame(updateGame);
+        }
+
+        // Save score to localStorage
+        function saveScoreToLeaderboard(score) {
+            const leaderboard = JSON.parse(localStorage.getItem('leaderboardEasy')) || [];
+            leaderboard.push({ name: "Player", score: score });
+            leaderboard.sort((a, b) => b.score - a.score); // Sort descending
+            localStorage.setItem('leaderboardEasy', JSON.stringify(leaderboard));
+        }
+
+        createTargets();
+        updateGame();
+    </script>
+</body>
+</html>

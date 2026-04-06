@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris Game</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: url('background.png') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            color: white;
+            text-align: center;
+        }
+
+        #gameContainer {
+            display: none;
+        }
+
+        canvas {
+            border: 2px solid #fff;
+            background-color: rgba(34, 34, 34, 0.8);
+        }
+
+        .difficulty {
+            display: flex;
+            gap: 20px;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .difficulty button {
+            padding: 15px 30px;
+            font-size: 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+            color: white;
+            background-color: #28529e;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .difficulty button:hover {
+            transform: scale(1.1);
+        }
+
+        .backmenu {
+            background-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <div id="menu">
+        <h1>Tetris Game</h1>
+        <div class="difficulty">
+            <button onclick="startGame('easy')">Easy</button>
+            <button onclick="startGame('medium')">Medium</button>
+            <button onclick="startGame('hard')">Hard</button>
+            <button onclick="startGame('extreme')">Extreme</button>
+        </div>
+    </div>
+
+    <div id="gameContainer">
+        <div id="scoreBoard">
+            <p>Score: <span id="score">0</span></p>
+            <p>World Record: <span id="worldRecord">0</span></p>
+        </div>
+        <canvas id="tetris" width="300" height="600"></canvas>
+        <button class="backmenu" onclick="backToMenu()">Back to Menu</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('tetris');
+        const context = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const worldRecordElement = document.getElementById('worldRecord');
+        const menu = document.getElementById('menu');
+        const gameContainer = document.getElementById('gameContainer');
+
+        context.scale(30, 30); // Scale up the canvas for better visuals
+
+        let arena, player, dropInterval, score, worldRecord;
+
+        const colors = [
+            null, 'red', 'yellow', 'orange', 'blue', 'cyan', 'green', 'purple'
+        ];
+
+        worldRecord = localStorage.getItem('worldRecord') || 0;
+        worldRecordElement.textContent = worldRecord;
+
+        function startGame(difficulty) {
+            // Set drop speed based on difficulty
+            switch (difficulty) {
+                case 'easy': dropInterval = 1200; break;
+                case 'medium': dropInterval = 800; break;
+                case 'hard': dropInterval = 500; break;
+                case 'extreme': dropInterval = 300; break;
+            }
+            // Initialize the game
+            menu.style.display = 'none';
+            gameContainer.style.display = 'block';
+
+            arena = createMatrix(10, 20);
+            player = { pos: { x: 0, y: 0 }, matrix: null };
+            score = 0;
+            scoreElement.textContent = score;
+
+            playerReset();
+            update();
+        }
+
+        function backToMenu() {
+            gameContainer.style.display = 'none';
+            menu.style.display = 'block';
+            cancelAnimationFrame(update);
+        }
+
+        function createMatrix(width, height) {
+            const matrix = [];
+            while (height--) matrix.push(new Array(width).fill(0));
+            return matrix;
+        }
+
+        function drawMatrix(matrix, offset) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        context.fillStyle = colors[value];
+                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
+                    }
+                });
+            });
+        }
+
+        function draw() {
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            drawMatrix(arena, { x: 0, y: 0 });
+            drawMatrix(player.matrix, player.pos);
+        }
+
+        function collide(arena, player) {
+            const [m, o] = [player.matrix, player.pos];
+            for (let y = 0; y < m.length; y++) {
+                for (let x = 0; x < m[y].length; x++) {
+                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function playerReset() {
+            const pieces = 'ILJOTSZ';
+            player.matrix = createPiece(pieces[(Math.random() * pieces.length) | 0]);
+            player.pos.y = 0;
+            player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+
+            if (collide(arena, player)) {
+                updateWorldRecord(score);
+                alert(`Game Over!\nFinal Score: ${score}`);
+                arena.forEach(row => row.fill(0));
+                score = 0;
+                scoreElement.textContent = score;
+            }
+        }
+
+        function playerDrop() {
+            player.pos.y++;
+            if (collide(arena, player)) {
+                player.pos.y--;
+                merge(arena, player);
+                playerReset();
+                arenaSweep();
+            }
+            dropCounter = 0;
+        }
+
+        function merge(arena, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        arena[y + player.pos.y][x + player.pos.x] = value;
+                    }
+                });
+            });
+        }
+
+        function arenaSweep() {
+            let rowCount = 1;
+            outer: for (let y = arena.length - 1; y >= 0; y--) {
+                for (let x = 0; x < arena[y].length; x++) {
+                    if (arena[y][x] === 0) continue outer;
+                }
+                const row = arena.splice(y, 1)[0].fill(0);
+                arena.unshift(row);
+                y++;
+                score += rowCount * 10;
+                scoreElement.textContent = score;
+                rowCount *= 2;
+
+                // Speed up slightly after clearing a row
+                dropInterval = Math.max(100, dropInterval - 20);
+            }
+        }
+
+        function updateWorldRecord(score) {
+            if (score > worldRecord) {
+                worldRecord = score;
+                localStorage.setItem('worldRecord', worldRecord);
+                worldRecordElement.textContent = worldRecord;
+            }
+        }
+
+        let dropCounter = 0;
+        let lastTime = 0;
+
+        function update(time = 0) {
+            const deltaTime = time - lastTime;
+            dropCounter += deltaTime;
+            if (dropCounter > dropInterval) playerDrop();
+            lastTime = time;
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        function createPiece(type) {
+            switch (type) {
+                case 'T': return [[0, 1, 0], [1, 1, 1], [0, 0, 0]];
+                case 'O': return [[2, 2], [2, 2]];
+                case 'L': return [[0, 0, 3], [3, 3, 3], [0, 0, 0]];
+                case 'J': return [[4, 0, 0], [4, 4, 4], [0, 0, 0]];
+                case 'I': return [[0, 0, 0, 0], [5, 5, 5, 5], [0, 0, 0, 0]];
+                case 'S': return [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
+                case 'Z': return [[7, 7, 0], [0, 7, 7], [0, 0, 0]];
+            }
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'ArrowLeft') player.pos.x--;
+            else if (event.key === 'ArrowRight') player.pos.x++;
+            else if (event.key === 'ArrowDown') playerDrop();
+            else if (event.key === 'ArrowUp') rotate(player.matrix, 1);
+        });
+
+        function rotate(matrix, dir) {
+            for (let y = 0; y < matrix.length; y++) {
+                for (let x = 0; x < y; x++) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+            }
+            if (dir > 0) matrix.forEach(row => row.reverse());
+            else matrix.reverse();
+        }
+    </script>
+</body>
+</html>

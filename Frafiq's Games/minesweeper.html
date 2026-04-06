@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Custom favicon (this is the icon that appears in the browser tab) -->
+    <link rel="icon" href="Frafiqs.png" type="image/png">
+
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German Minesweeper</title>
+    <link rel="stylesheet" href="stylething.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Minesweeper</h1>
+        <div class="grid" id="grid"></div>
+        <div class="info">
+            <p>Time: <span id="timer">0</span>s</p>
+            <p>Mines Left: <span id="minesLeft">10</span></p>
+        </div>
+        <button id="reset">Reset Game</button>
+        <!-- Back to Main Menu Button -->
+        <button onclick="location.href='//127.0.0.1:5500/index%20copy.html'" id="backToMenu">Back to Main Menu</button>
+        
+    </div>
+
+    <!-- Hidden autoplay video -->
+    <video id="backgroundVideo" autoplay muted loop style="display: none;">
+        <source src="german.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <video id="deathVideo" style="display: none;" loop autoplay>
+        <source src="german.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <script src="script.js"></script>
+    
+    <!-- Mute Button -->
+    <button id="muteButton" style="position: fixed; bottom: 10px; right: 10px; background: none; border: none; cursor: pointer; z-index: 1000;">
+        <img src="mute.png" alt="Mute" id="muteIcon" style="width: 70px; height: 70px;">  <!-- Increased size to 70px -->
+    </button>
+
+    <!-- Example Audio -->
+    <audio class="background-audio" autoplay loop>
+        <source src="german.mp3" type="audio/mp3">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- JavaScript -->
+    <script>
+        const muteButton = document.getElementById("muteButton");
+        const muteIcon = document.getElementById("muteIcon");
+        
+        // Select all audio elements with the class "background-audio"
+        const backgroundAudios = document.querySelectorAll('audio.background-audio');
+
+        muteButton.addEventListener("click", () => {
+            // Check if any audio is muted
+            let allMuted = Array.from(backgroundAudios).every(audio => audio.muted);
+
+            // Toggle mute/unmute for all audio elements
+            backgroundAudios.forEach(audio => {
+                audio.muted = !allMuted;  // Mute if not already muted, unmute if already muted
+            });
+
+            // Change the icon based on mute state
+            muteIcon.src = allMuted ? "mute.png" : "unmute.png";
+        });
+    </script>
+</body>
+</html>

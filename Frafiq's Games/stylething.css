@@ -1,0 +1,117 @@
+/* General Styling */
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: url('background.png') no-repeat center center fixed;
+    background-size: cover;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+
+.game-container {
+    text-align: center;
+    background-color: #353131;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.text {
+    margin-bottom: 20px;
+    font-size: 32px;
+    color: white;
+}
+
+h1 {
+    margin-bottom: 20px;
+    font-size: 32px;
+    color: white;
+}
+p {
+
+    color: white;
+}
+
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(10, 40px);
+    grid-gap: 5px;
+    margin-bottom: 20px;
+}
+
+
+.grid div {
+    width: 40px;
+    height: 40px;
+    background-color: #11ad33;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+
+.grid div:hover {
+    background-color: #fffb00;
+}
+
+
+.grid div.revealed {
+    background-color: #ffffff;
+}
+
+
+.grid div.mine {
+    background-color: #ff4d4d;
+}
+.grid div.flagged {
+    background-color: #ffffff; /* Sets the base background color to white */
+    background-image: url('NINE.png'); /* Sets the PNG as the background */
+    background-size: cover; /* Ensures the image covers the entire element */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+}
+
+
+
+
+/* Info Styling */
+.info {
+    margin-top: 10px;
+    font-size: 18px;
+}
+
+
+button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+
+button:hover {
+    background-color: #45a049;
+}
+
+.green {
+    background-color: green;
+}
+
+.red {
+    background-color: red;
+}

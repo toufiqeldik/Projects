@@ -1,0 +1,9 @@
+/* General Styling */
+body {
+    display: flex;
+    justify-content: center;
+    background: url('background.png') no-repeat center center fixed;
+    background-size: cover;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}

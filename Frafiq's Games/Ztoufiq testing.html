@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Custom favicon -->
+    <link rel="icon" href="Frafiqs.png" type="image/png">
+ 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: url('background.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        h1 {
+            color: #ffffff;
+            text-align: center;
+            font-size: 55px;
+        }
+
+        #leaderboard-container {
+            display: flex;
+            flex-wrap: nowrap; /* Keeps the items in a single row */
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .leaderboard-section {
+            border: 1px solid #ccc;
+            padding: 20px;
+            background: #fff;
+            width: 16%; /* Ensures each section fits neatly across the screen */
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 14px;
+            width: 90%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #clearHistoryBtn {
+            background-color: #f44336;
+            margin-top: 10px;
+        }
+
+        #clearHistoryBtn:hover {
+            background-color: #da190b;
+        }
+    </style>
+</head>
+<body>
+    <br>
+    <h1>Leaderboards</h1>
+    <br><br><br><br>
+    <div id="leaderboard-container">
+        <!-- Replicate leaderboard structure 6 times -->
+        <div class="leaderboard-section" id="leaderboard1"></div>
+        <div class="leaderboard-section" id="leaderboard2"></div>
+        <div class="leaderboard-section" id="leaderboard3"></div>
+        <div class="leaderboard-section" id="leaderboard4"></div>
+        <div class="leaderboard-section" id="leaderboard5"></div>
+        <div class="leaderboard-section" id="leaderboard6"></div>
+    </div>
+
+    <script>
+        // Define leaderboard names
+        const leaderboardNames = ["Aim Trainer - Easy", "Aim Trainer - Medium", "Aim Trainer - Hard", "Aim Trainer - Extreme", "Tetris", "Minesweeper"];
+
+        // Function to create a single leaderboard structure
+        function createLeaderboardHTML(id, name) {
+            return `
+                <h3>${name}</h3>
+                <div>
+                    <label for="name${id}">Name:</label>
+                    <input type="text" id="name${id}" placeholder="Enter your name">
+                </div>
+                <div>
+                    <label for="score${id}">${name === "Minesweeper" ? "Time (Seconds)" : "Score"}:</label>
+                    <input type="number" id="score${id}" placeholder="${name === "Minesweeper" ? "Enter time in seconds" : "Enter your score"}">
+                </div>
+                <button onclick="addScore(${id})">Add Score</button>
+                <h3>Top Scores:</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>${name === "Minesweeper" ? "Time" : "Score"}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardTable${id}">
+                        <!-- Rows populated dynamically -->
+                    </tbody>
+                </table>
+                <button id="clearHistoryBtn${id}" onclick="clearLeaderboard(${id})">Clear History</button>
+            `;
+        }
+
+        // Load leaderboards from local storage or initialize empty arrays
+        let leaderboards = JSON.parse(localStorage.getItem("leaderboards")) || [[], [], [], [], [], []];
+
+        // Initialize leaderboards
+        for (let i = 1; i <= 6; i++) {
+            document.getElementById(`leaderboard${i}`).innerHTML = createLeaderboardHTML(i, leaderboardNames[i-1]);
+            displayLeaderboard(i); // Populate with saved data
+        }
+
+        // Function to add score to a specific leaderboard
+        function addScore(id) {
+            const name = document.getElementById(`name${id}`).value;
+            const score = parseInt(document.getElementById(`score${id}`).value);
+
+            if (!name || isNaN(score)) {
+                alert("Please enter both a name and a valid score/time.");
+                return;
+            }
+
+            // For Minesweeper, sort by lowest time (fastest)
+            if (leaderboardNames[id-1] === "Minesweeper") {
+                leaderboards[id - 1].push({ name, time: score });
+                leaderboards[id - 1].sort((a, b) => a.time - b.time);  // Sort by time ascending (fastest first)
+            } else {
+                leaderboards[id - 1].push({ name, score });
+                leaderboards[id - 1].sort((a, b) => b.score - a.score);  // Sort by score descending
+            }
+
+            // Save to localStorage
+            localStorage.setItem("leaderboards", JSON.stringify(leaderboards));
+
+            // Update display
+            displayLeaderboard(id);
+
+            // Clear input fields
+            document.getElementById(`name${id}`).value = '';
+            document.getElementById(`score${id}`).value = '';
+        }
+
+        // Function to display a leaderboard
+        function displayLeaderboard(id) {
+            const tbody = document.getElementById(`leaderboardTable${id}`);
+            tbody.innerHTML = '';
+
+            leaderboards[id - 1].forEach((entry, index) => {
+                const row = tbody.insertRow();
+
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+                const cell3 = row.insertCell(2);
+
+                cell1.textContent = index + 1;
+                cell2.textContent = entry.name;
+                cell3.textContent = leaderboardNames[id - 1] === "Minesweeper" ? entry.time : entry.score;
+            });
+        }
+
+        // Function to clear a specific leaderboard
+        function clearLeaderboard(id) {
+            leaderboards[id - 1] = [];
+            displayLeaderboard(id);
+
+            // Save the cleared leaderboard to localStorage
+            localStorage.setItem("leaderboards", JSON.stringify(leaderboards));
+        }
+    </script>
+</body>
+</html>

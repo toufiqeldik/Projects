@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Custom favicon (this is the icon that appears in the browser tab) -->
+    <link rel="icon" href="Frafiqs.png" type="image/png">
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake game</title>
+    <link rel="stylesheet" href="stylee.css">
+    <style>
+        /* Inline CSS for the Back to Main Menu button */
+        #back-to-main-menu {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        #back-to-main-menu:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- Back to Main Menu Button -->
+    <a id="back-to-main-menu" href="http://127.0.0.1:5500/index%20copy.html">Back to Main Menu</a>
+
+    <script src="gemr.js"></script>
+</body>
+</html>

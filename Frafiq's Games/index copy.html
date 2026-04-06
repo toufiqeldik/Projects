@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Custom favicon (this is the icon that appears in the browser tab) -->
+    <link rel="icon" href="Frafiqs.png" type="image/png">
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frafiq's Games</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: url('background.png') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 50px;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .difficulty {
+            display: flex;
+            gap: 20px;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .difficulty a {
+            padding: 15px 30px;
+            font-size: 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            display: inline-block;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .difficulty a:hover {
+            transform: scale(1.1);
+        }
+
+        .easy {
+            background-color: #4caf50;
+        }
+
+        .medium {
+            background-color: #4caf50;
+            color: black;
+        }
+
+        .hard {
+            background-color: #4caf50;
+        }
+
+        .extreme {
+            background-color: #4caf50;
+        }
+
+        .username-input {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .username-input input {
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div>
+<img src="Frafiqs.png" style="width: 350px;">
+
+        <h1>Frafiq's Games</h1>
+
+        <!-- Username input section -->
+       
+
+        <div class="difficulty">
+            <a href="http://127.0.0.1:5500/index.html" class="easy" id="easyBtn">Aim Trainer</a>
+            <a href="http://127.0.0.1:5500/Tetris.html" class="medium" id="mediumBtn">Tetris</a>
+            <a href="http://127.0.0.1:5500/minesweeper.html" class="hard" id="hardBtn">German Minesweeper </a>
+            <a href="http://127.0.0.1:5500/snake%20game.html" class="extreme" id="extremeBtn">Snake Game</a>
+            <a href="http://127.0.0.1:5500/testleaderboard.html" class="extreme" id="extremeBtn">Leaderboards</a>
+        </div>
+    </div>
+
+    <script>
+        const usernameInput = document.getElementById("username");
+
+        // Difficulty pages
+        const difficultyLinks = {
+            easy: 'easy.html',
+            medium: 'medium.html',
+            hard: 'hard.html',
+            extreme: 'extreme.html',
+        };
+
+        // Generate a random guest username
+        function generateGuestUsername() {
+            const randomNumber = Math.floor(1000 + Math.random() * 9000);
+            return `Guest${randomNumber}`;
+        }
+
+        // Handle difficulty selection
+        function handleDifficultySelection(difficulty) {
+            let username = usernameInput.value.trim();
+            if (!username) {
+                username = generateGuestUsername();
+            }
+            localStorage.setItem("currentUsername", username);
+            localStorage.setItem("currentDifficulty", difficulty);
+            window.location.href = difficultyLinks[difficulty];
+        }
+
+        // Add event listeners for difficulty buttons
+        document.getElementById("easyBtn").addEventListener("click", () => handleDifficultySelection('easy'));
+        document.getElementById("mediumBtn").addEventListener("click", () => handleDifficultySelection('medium'));
+        document.getElementById("hardBtn").addEventListener("click", () => handleDifficultySelection('hard'));
+        document.getElementById("extremeBtn").addEventListener("click", () => handleDifficultySelection('extreme'));
+    </script>
+</body>
+</html>

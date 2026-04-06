@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Custom favicon (this is the icon that appears in the browser tab) -->
+    <link rel="icon" href="Frafiqs.png" type="image/png">
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stylish Minesweeper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .game-container {
+            text-align: center;
+            padding: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 30px);
+            grid-gap: 5px;
+            margin: 20px auto;
+            width: fit-content;
+        }
+        .grid div {
+            width: 30px;
+            height: 30px;
+            background: #ccc;
+            border: 1px solid #999;
+            cursor: pointer;
+        }
+        .info {
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 14px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        #muteButton {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        #muteButton img {
+            width: 40px;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+   
+
+    <!-- Mute/Unmute Button -->
+    <button id="muteButton">
+        <img src="mute.png" alt="Mute" id="muteIcon">
+    </button>
+
+    <!-- Background Video -->
+    <video id="backgroundVideo" autoplay muted loop style="display: none;">
+        <source src="german.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <script>
+        const muteButton = document.getElementById("muteButton");
+        const muteIcon = document.getElementById("muteIcon");
+        const backgroundVideo = document.getElementById("backgroundVideo");
+
+        // Toggle mute/unmute functionality
+        muteButton.addEventListener("click", () => {
+            if (backgroundVideo.muted) {
+                backgroundVideo.muted = false;
+                muteIcon.src = "unmute.png"; // Change to unmute icon
+            } else {
+                backgroundVideo.muted = true;
+                muteIcon.src = "mute.png"; // Change to mute icon
+            }
+        });
+
+        // Basic Minesweeper Grid Example
+        const grid = document.getElementById("grid");
+        for (let i = 0; i < 100; i++) {
+            const cell = document.createElement("div");
+            grid.appendChild(cell);
+        }
+
+        // Reset Game Placeholder
+        document.getElementById("reset").addEventListener("click", () => {
+            alert("Resetting the game!");
+            // Add your reset logic here
+        });
+    </script>
+</body>
+</html>
